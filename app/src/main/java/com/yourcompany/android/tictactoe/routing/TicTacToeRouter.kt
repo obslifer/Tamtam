@@ -9,7 +9,8 @@ import androidx.compose.runtime.setValue
  */
 sealed class Screen {
   object HostOrDiscover : Screen()
-  object Waiting : Screen()
+  object Hosting : Screen()
+  object Discovering : Screen()
   object Game : Screen()
 }
 

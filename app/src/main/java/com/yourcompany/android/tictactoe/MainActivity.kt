@@ -27,7 +27,8 @@ class MainActivity : ComponentActivity() {
     Surface {
       when (TicTacToeRouter.currentScreen) {
         is Screen.HostOrDiscover -> HostOrDiscoverScreen()
-        is Screen.Waiting -> WaitingScreen()
+        is Screen.Hosting -> WaitingScreen("Hosting...")
+        is Screen.Discovering -> WaitingScreen("Discovering...")
         is Screen.Game -> GameScreen()
       }
     }
