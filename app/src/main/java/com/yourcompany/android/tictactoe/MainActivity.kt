@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
@@ -20,12 +21,22 @@ import com.yourcompany.android.tictactoe.ui.theme.TicTacToeTheme
 
 class MainActivity : ComponentActivity() {
 
+  private val requestMultiplePermissions = registerForActivityResult(
+    ActivityResultContracts.RequestMultiplePermissions()
+  ) { permissions ->
+    if (permissions.entries.any { !it.value }) {
+      Toast.makeText(this, "Required permissions needed", Toast.LENGTH_LONG).show()
+      finish()
+    } else {
+      recreate()
+    }
+  }
+
   override fun onStart() {
     super.onStart()
     if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
-      requestPermissions(
-        REQUIRED_PERMISSIONS,
-        REQUEST_CODE_REQUIRED_PERMISSIONS
+      requestMultiplePermissions.launch(
+        REQUIRED_PERMISSIONS
       )
     }
   }
@@ -37,22 +48,6 @@ class MainActivity : ComponentActivity() {
         it
       ) == PackageManager.PERMISSION_GRANTED
     }
-  }
-
-  override fun onRequestPermissionsResult(
-    requestCode: Int, permissions: Array<String>, grantResults: IntArray
-  ) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-    if (requestCode != REQUEST_CODE_REQUIRED_PERMISSIONS) return
-    grantResults.forEach { grantResult ->
-      if (grantResult == PackageManager.PERMISSION_DENIED) {
-        Toast.makeText(this, "Required permissions needed", Toast.LENGTH_LONG).show()
-        finish()
-        return
-      }
-    }
-    recreate()
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,7 +72,6 @@ class MainActivity : ComponentActivity() {
   }
 
   companion object {
-    private const val REQUEST_CODE_REQUIRED_PERMISSIONS = 149
     private val REQUIRED_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       arrayOf(
         Manifest.permission.BLUETOOTH_SCAN,
