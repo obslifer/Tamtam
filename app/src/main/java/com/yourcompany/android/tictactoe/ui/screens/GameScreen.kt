@@ -6,87 +6,65 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import com.yourcompany.android.tictactoe.domain.model.GameState
+import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
 
-@Preview
 @Composable
-fun GameScreen() {
-  val p00 = rememberSaveable { mutableStateOf(false) }
-  val p01 = rememberSaveable { mutableStateOf(false) }
-  val p02 = rememberSaveable { mutableStateOf(false) }
-  val p10 = rememberSaveable { mutableStateOf(false) }
-  val p11 = rememberSaveable { mutableStateOf(false) }
-  val p12 = rememberSaveable { mutableStateOf(false) }
-  val p20 = rememberSaveable { mutableStateOf(false) }
-  val p21 = rememberSaveable { mutableStateOf(false) }
-  val p22 = rememberSaveable { mutableStateOf(false) }
+fun GameScreen(viewModel: TicTacToeViewModel) {
+  val state: GameState by viewModel.state.observeAsState(GameState.Uninitialized)
 
+  Board(
+    board = state.board,
+    onBucketClick = { position -> viewModel.play(state.playerTurn, position) }
+  )
+}
+
+@Composable
+fun Board(
+  board: Array<Array<Int>>,
+  onBucketClick: (position: Pair<Int, Int>) -> Unit
+) {
   Row(
     modifier = Modifier.fillMaxSize()
   ) {
-    Column(modifier = Modifier.weight(1f)) {
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p00.value) Color.White else Color.Black),
-        onClick = { p00.value = !p00.value }) {}
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p01.value) Color.White else Color.Black),
-        onClick = { p01.value = !p01.value }) {}
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p02.value) Color.White else Color.Black),
-        onClick = { p02.value = !p02.value }) {}
+    for (i in board.indices) {
+      Column(modifier = Modifier.weight(1f)) {
+        for (j in board.indices) {
+          Bucket(
+            modifier = Modifier
+              .fillMaxSize()
+              .weight(1f),
+            player = board[i][j],
+            onClick = { onBucketClick(i to j) }
+          )
+        }
+      }
     }
-    Column(modifier = Modifier.weight(1f)) {
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p10.value) Color.White else Color.Black),
-        onClick = { p10.value = !p10.value }) {}
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p11.value) Color.White else Color.Black),
-        onClick = { p11.value = !p11.value }) {}
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p12.value) Color.White else Color.Black),
-        onClick = { p12.value = !p12.value }) {}
-    }
-    Column(modifier = Modifier.weight(1f)) {
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p20.value) Color.White else Color.Black),
-        onClick = { p20.value = !p20.value }) {}
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p21.value) Color.White else Color.Black),
-        onClick = { p21.value = !p21.value }) {}
-      OutlinedButton(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1f),
-        colors = ButtonDefaults.buttonColors(if (!p22.value) Color.White else Color.Black),
-        onClick = { p22.value = !p22.value }) {}
-    }
+  }
+}
+
+@Composable
+fun Bucket(
+  modifier: Modifier,
+  player: Int,
+  onClick: () -> Unit
+) {
+  OutlinedButton(
+    modifier = modifier,
+    colors = ButtonDefaults.buttonColors(getPlayerColor(player)),
+    onClick = onClick
+  ) {}
+}
+
+private fun getPlayerColor(player: Int): Color {
+  return when (player) {
+    0 -> Color.White
+    1 -> Color.Red
+    2 -> Color.Green
+    else -> throw IllegalArgumentException("Missing color for player $player")
   }
 }

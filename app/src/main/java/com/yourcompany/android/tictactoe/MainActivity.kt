@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
@@ -18,8 +19,11 @@ import com.yourcompany.android.tictactoe.ui.screens.GameScreen
 import com.yourcompany.android.tictactoe.ui.screens.HostOrDiscoverScreen
 import com.yourcompany.android.tictactoe.ui.screens.WaitingScreen
 import com.yourcompany.android.tictactoe.ui.theme.TicTacToeTheme
+import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
 
 class MainActivity : ComponentActivity() {
+
+  private val viewModel: TicTacToeViewModel by viewModels()
 
   private val requestMultiplePermissions = registerForActivityResult(
     ActivityResultContracts.RequestMultiplePermissions()
@@ -52,6 +56,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
     setContent {
       TicTacToeTheme {
         MainActivityScreen()
@@ -66,7 +71,7 @@ class MainActivity : ComponentActivity() {
         is Screen.HostOrDiscover -> HostOrDiscoverScreen()
         is Screen.Hosting -> WaitingScreen("Hosting...")
         is Screen.Discovering -> WaitingScreen("Discovering...")
-        is Screen.Game -> GameScreen()
+        is Screen.Game -> GameScreen(viewModel)
       }
     }
   }
