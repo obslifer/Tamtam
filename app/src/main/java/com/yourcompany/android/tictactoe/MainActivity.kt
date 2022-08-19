@@ -13,17 +13,22 @@ import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
+import com.google.android.gms.nearby.Nearby
 import com.yourcompany.android.tictactoe.routing.Screen
 import com.yourcompany.android.tictactoe.routing.TicTacToeRouter
+import com.yourcompany.android.tictactoe.ui.screens.DiscoveringScreen
 import com.yourcompany.android.tictactoe.ui.screens.GameScreen
 import com.yourcompany.android.tictactoe.ui.screens.HostOrDiscoverScreen
-import com.yourcompany.android.tictactoe.ui.screens.WaitingScreen
+import com.yourcompany.android.tictactoe.ui.screens.HostingScreen
 import com.yourcompany.android.tictactoe.ui.theme.TicTacToeTheme
 import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
+import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-  private val viewModel: TicTacToeViewModel by viewModels()
+  private val viewModel: TicTacToeViewModel by viewModels {
+    TicTacToeViewModelFactory(Nearby.getConnectionsClient(applicationContext))
+  }
 
   private val requestMultiplePermissions = registerForActivityResult(
     ActivityResultContracts.RequestMultiplePermissions()
@@ -68,9 +73,9 @@ class MainActivity : ComponentActivity() {
   private fun MainActivityScreen() {
     Surface {
       when (TicTacToeRouter.currentScreen) {
-        is Screen.HostOrDiscover -> HostOrDiscoverScreen()
-        is Screen.Hosting -> WaitingScreen("Hosting...")
-        is Screen.Discovering -> WaitingScreen("Discovering...")
+        is Screen.HostOrDiscover -> HostOrDiscoverScreen(viewModel)
+        is Screen.Hosting -> HostingScreen(viewModel)
+        is Screen.Discovering -> DiscoveringScreen(viewModel)
         is Screen.Game -> GameScreen(viewModel)
       }
     }

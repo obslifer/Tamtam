@@ -3,20 +3,38 @@ package com.yourcompany.android.tictactoe.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.yourcompany.android.tictactoe.routing.Screen
-import com.yourcompany.android.tictactoe.routing.TicTacToeRouter
+import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
+
+@Composable
+fun HostingScreen(
+  viewModel: TicTacToeViewModel
+) {
+  WaitingScreen(
+    title = "Hosting...",
+    onStopClick = { viewModel.stopHosting() }
+  )
+}
+
+@Composable
+fun DiscoveringScreen(
+  viewModel: TicTacToeViewModel
+) {
+  WaitingScreen(
+    title = "Discovering...",
+    onStopClick = { viewModel.stopDiscovering() }
+  )
+}
 
 @Composable
 fun WaitingScreen(
-  title: String
+  title: String,
+  onStopClick: () -> Unit
 ) {
   Column(
     modifier = Modifier.fillMaxSize(),
@@ -26,15 +44,9 @@ fun WaitingScreen(
     Text(text = title)
     CircularProgressIndicator()
     Button(
-      onClick = { TicTacToeRouter.navigateTo(Screen.HostOrDiscover) }
+      onClick = onStopClick
     ) {
       Text(text = "Stop")
     }
   }
-}
-
-@Preview
-@Composable
-fun WaitingScreenPreview() {
-  WaitingScreen("Hosting...")
 }
