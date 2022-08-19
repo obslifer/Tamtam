@@ -31,7 +31,7 @@ fun GameScreen(viewModel: TicTacToeViewModel) {
     OngoingGameScreen(
       playerTurn = state.playerTurn,
       board = state.board,
-      onBucketClick = { position -> viewModel.play(state.playerTurn, position) }
+      onBucketClick = { position -> viewModel.play(position) }
     )
   }
 }

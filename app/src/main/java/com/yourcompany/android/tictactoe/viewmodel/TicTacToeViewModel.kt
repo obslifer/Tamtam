@@ -33,14 +33,22 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
   val state: LiveData<GameState> = _state
 
   private val STRATEGY = Strategy.P2P_STAR
+
   private fun getLocalUserName() = "User" + System.currentTimeMillis().toString()
+  private var localPlayer: Int = 0
+  private var opponentPlayer: Int = 0
+  private var opponentEndpointId: String = ""
 
   private val payloadCallback: PayloadCallback = object : PayloadCallback() {
     override fun onPayloadReceived(endpointId: String, payload: Payload) {
       Log.d(TAG, "onPayloadReceived")
       // This always gets the full data of the payload. Is null if it's not a BYTES payload.
       if (payload.getType() == Payload.Type.BYTES) {
-        val command = String(payload.asBytes()!!, UTF_8)
+        val positionStr = String(payload.asBytes()!!, UTF_8)
+        val positionArray = positionStr.split(",")
+        val position = positionArray[0].toInt() to positionArray[1].toInt()
+        Log.d(TAG, "Received [${position.first},${position.second}] from $endpointId")
+        play(opponentPlayer, position)
       }
     }
 
@@ -96,6 +104,9 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
           connectionsClient.stopAdvertising()
           connectionsClient.stopDiscovery()
+          opponentEndpointId = endpointId
+          newGame()
+          TicTacToeRouter.navigateTo(Screen.Game)
         }
         ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
           // The connection was rejected by one or both sides.
@@ -118,7 +129,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
       Log.d(TAG, "onDisconnected")
     }
   }
-  
+
   fun startHosting() {
     Log.d(TAG, "Start advertising...")
     val advertisingOptions = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
@@ -130,8 +141,10 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
       advertisingOptions
     ).addOnSuccessListener {
       // Advertising...
-      TicTacToeRouter.navigateTo(Screen.Hosting)
       Log.d(TAG, "Advertising...")
+      TicTacToeRouter.navigateTo(Screen.Hosting)
+      localPlayer = 1
+      opponentPlayer = 2
     }.addOnFailureListener {
       // Unable to start advertising
       Log.d(TAG, "Unable to start advertising")
@@ -142,6 +155,9 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     Log.d(TAG, "Stop advertising")
     connectionsClient.stopAdvertising()
     TicTacToeRouter.navigateTo(Screen.HostOrDiscover)
+    localPlayer = 0
+    opponentPlayer = 0
+    opponentEndpointId = ""
   }
 
   fun startDiscovering() {
@@ -156,6 +172,8 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
         // Discovering...
         Log.d(TAG, "Discovering...")
         TicTacToeRouter.navigateTo(Screen.Discovering)
+        localPlayer = 2
+        opponentPlayer = 1
       }.addOnFailureListener {
         // Unable to start discovering
         Log.d(TAG, "Unable to start discovering")
@@ -166,6 +184,9 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     Log.d(TAG, "Stop discovering")
     connectionsClient.stopDiscovery()
     TicTacToeRouter.navigateTo(Screen.HostOrDiscover)
+    localPlayer = 0
+    opponentPlayer = 0
+    opponentEndpointId = ""
   }
 
   fun newGame() {
@@ -173,7 +194,22 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     _state.value = GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
   }
 
-  fun play(player: Int, position: Pair<Int, Int>) {
+  fun play(position: Pair<Int, Int>) {
+    if (game.playerTurn != localPlayer) return
+    if (!game.isNonPlayedBucket(position)) return
+
+    play(localPlayer, position)
+
+    Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
+    connectionsClient.sendPayload(
+      opponentEndpointId,
+      Payload.fromBytes("${position.first},${position.second}".toByteArray())
+    )
+  }
+
+  private fun play(player: Int, position: Pair<Int, Int>) {
+    Log.d(TAG, "Player $player played [${position.first},${position.second}]")
+
     game.play(player, position)
     _state.value = GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
   }
