@@ -125,6 +125,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
       // Disconnected from this endpoint. No more data can be
       // sent or received.
       Log.d(TAG, "onDisconnected")
+      goToHome()
     }
   }
 
