@@ -1,5 +1,6 @@
 package com.yourcompany.android.tictactoe.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,10 @@ import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
 @Composable
 fun GameScreen(viewModel: TicTacToeViewModel) {
   val state: GameState by viewModel.state.observeAsState(GameState.Uninitialized)
+
+  BackHandler(onBack = {
+    viewModel.goToHome()
+  })
 
   if (state.isOver) {
     GameOverScreen(

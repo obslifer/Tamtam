@@ -102,6 +102,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
           connectionsClient.stopAdvertising()
           connectionsClient.stopDiscovery()
           opponentEndpointId = endpointId
+          Log.d(TAG, "opponentEndpointId: $opponentEndpointId")
           newGame()
           TicTacToeRouter.navigateTo(Screen.Game)
         }
@@ -148,15 +149,6 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     }
   }
 
-  fun stopHosting() {
-    Log.d(TAG, "Stop advertising")
-    connectionsClient.stopAdvertising()
-    TicTacToeRouter.navigateTo(Screen.HostOrDiscover)
-    localPlayer = 0
-    opponentPlayer = 0
-    opponentEndpointId = ""
-  }
-
   fun startDiscovering() {
     Log.d(TAG, "Start discovering...")
     val discoveryOptions = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
@@ -177,16 +169,8 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
       }
   }
 
-  fun stopDiscovering() {
-    Log.d(TAG, "Stop discovering")
-    connectionsClient.stopDiscovery()
-    TicTacToeRouter.navigateTo(Screen.HostOrDiscover)
-    localPlayer = 0
-    opponentPlayer = 0
-    opponentEndpointId = ""
-  }
-
   fun newGame() {
+    Log.d(TAG, "Starting new game")
     game = TicTacToe()
     _state.value = GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
   }
@@ -196,12 +180,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     if (game.isPlayedBucket(position)) return
 
     play(localPlayer, position)
-
-    Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
-    connectionsClient.sendPayload(
-      opponentEndpointId,
-      position.toPayLoad()
-    )
+    sendPosition(position)
   }
 
   private fun play(player: Int, position: Pair<Int, Int>) {
@@ -211,16 +190,36 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     _state.value = GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
   }
 
+  private fun sendPosition(position: Pair<Int, Int>) {
+    Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
+    connectionsClient.sendPayload(
+      opponentEndpointId,
+      position.toPayLoad()
+    )
+  }
+
   override fun onCleared() {
+    stopClient()
+    super.onCleared()
+  }
+
+  fun goToHome() {
+    stopClient()
+    TicTacToeRouter.navigateTo(Screen.HostOrDiscover)
+  }
+
+  private fun stopClient() {
     Log.d(TAG, "Stop advertising, discovering, all endpoints")
     connectionsClient.stopAdvertising()
     connectionsClient.stopDiscovery()
     connectionsClient.stopAllEndpoints()
-    super.onCleared()
+    localPlayer = 0
+    opponentPlayer = 0
+    opponentEndpointId = ""
   }
 
   private companion object {
-    const val TAG = "ViewModel"
+    const val TAG = "TicTacToeVM"
     val STRATEGY = Strategy.P2P_STAR
   }
 }

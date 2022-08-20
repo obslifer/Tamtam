@@ -1,5 +1,6 @@
 package com.yourcompany.android.tictactoe.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,9 +16,13 @@ import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
 fun HostingScreen(
   viewModel: TicTacToeViewModel
 ) {
+  BackHandler(onBack = {
+    viewModel.goToHome()
+  })
+
   WaitingScreen(
     title = "Hosting...",
-    onStopClick = { viewModel.stopHosting() }
+    onStopClick = { viewModel.goToHome() }
   )
 }
 
@@ -25,9 +30,13 @@ fun HostingScreen(
 fun DiscoveringScreen(
   viewModel: TicTacToeViewModel
 ) {
+  BackHandler(onBack = {
+    viewModel.goToHome()
+  })
+
   WaitingScreen(
     title = "Discovering...",
-    onStopClick = { viewModel.stopDiscovering() }
+    onStopClick = { viewModel.goToHome() }
   )
 }
 
