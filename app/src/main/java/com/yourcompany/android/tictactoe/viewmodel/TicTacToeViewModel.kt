@@ -26,17 +26,17 @@ import java.util.*
 import kotlin.text.Charsets.UTF_8
 
 class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : ViewModel() {
-  private var game = TicTacToe()
-
-  private val _state = MutableLiveData(
-    GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
-  )
-  val state: LiveData<GameState> = _state
-
   private val localUsername = UUID.randomUUID().toString()
   private var localPlayer: Int = 0
   private var opponentPlayer: Int = 0
   private var opponentEndpointId: String = ""
+
+  private var game = TicTacToe()
+
+  private val _state = MutableLiveData(
+    GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
+  )
+  val state: LiveData<GameState> = _state
 
   private val payloadCallback: PayloadCallback = object : PayloadCallback() {
     override fun onPayloadReceived(endpointId: String, payload: Payload) {
@@ -172,7 +172,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
   fun newGame() {
     Log.d(TAG, "Starting new game")
     game = TicTacToe()
-    _state.value = GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
+    _state.value = GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
   }
 
   fun play(position: Pair<Int, Int>) {
@@ -187,7 +187,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     Log.d(TAG, "Player $player played [${position.first},${position.second}]")
 
     game.play(player, position)
-    _state.value = GameState(game.playerTurn, game.playerWon, game.isOver, game.board)
+    _state.value = GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
   }
 
   private fun sendPosition(position: Pair<Int, Int>) {
@@ -205,7 +205,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
   fun goToHome() {
     stopClient()
-    TicTacToeRouter.navigateTo(Screen.HostOrDiscover)
+    TicTacToeRouter.navigateTo(Screen.Home)
   }
 
   private fun stopClient() {

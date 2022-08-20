@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -16,6 +17,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.yourcompany.android.tictactoe.domain.model.GameState
 import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
 
@@ -34,6 +38,7 @@ fun GameScreen(viewModel: TicTacToeViewModel) {
     )
   } else {
     OngoingGameScreen(
+      localPlayer = state.localPlayer,
       playerTurn = state.playerTurn,
       board = state.board,
       onBucketClick = { position -> viewModel.play(position) }
@@ -47,17 +52,21 @@ fun GameOverScreen(
   onNewGameClick: () -> Unit
 ) {
   Column(
-    modifier = Modifier.fillMaxSize(),
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(16.dp),
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    if (playerWon > 0) {
-      Text(text = "Player $playerWon won!")
-    } else {
-      Text(text = "It's a tie!")
-    }
+    Text(text = "Game over")
+    Text(
+      text = if (playerWon > 0) "Player $playerWon won!" else "It's a tie!",
+      fontWeight = FontWeight.Bold
+    )
     Button(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(0.dp, 16.dp),
       onClick = onNewGameClick
     ) {
       Text(text = "New game!")
@@ -67,6 +76,7 @@ fun GameOverScreen(
 
 @Composable
 fun OngoingGameScreen(
+  localPlayer: Int,
   playerTurn: Int,
   board: Array<Array<Int>>,
   onBucketClick: (position: Pair<Int, Int>) -> Unit
@@ -76,7 +86,11 @@ fun OngoingGameScreen(
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    Text(text = "Player Turn: $playerTurn")
+    Text(text = "You're player $localPlayer")
+    Text(
+      text = if (localPlayer == playerTurn) "Your turn!" else "Waiting for player $playerTurn...",
+      fontWeight = FontWeight.Bold
+    )
     Board(
       board = board,
       onBucketClick = { position -> onBucketClick(position) }
@@ -128,4 +142,27 @@ private fun getPlayerColor(player: Int): Color {
     2 -> Color.Green
     else -> throw IllegalArgumentException("Missing color for player $player")
   }
+}
+
+@Preview
+@Composable
+fun GameOverPlayerWonScreenPreview() {
+  GameOverScreen(playerWon = 1, onNewGameClick = {})
+}
+
+@Preview
+@Composable
+fun GameOverTieScreenPreview() {
+  GameOverScreen(playerWon = 0, onNewGameClick = {})
+}
+
+@Preview
+@Composable
+fun OngoingGameScreenPreview() {
+  OngoingGameScreen(
+    localPlayer = 1,
+    playerTurn = 2,
+    board = arrayOf(arrayOf(0, 0, 0), arrayOf(0, 0, 0), arrayOf(0, 0, 0)),
+    onBucketClick = {}
+  )
 }

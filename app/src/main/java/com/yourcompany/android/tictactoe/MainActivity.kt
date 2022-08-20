@@ -18,7 +18,7 @@ import com.yourcompany.android.tictactoe.routing.Screen
 import com.yourcompany.android.tictactoe.routing.TicTacToeRouter
 import com.yourcompany.android.tictactoe.ui.screens.DiscoveringScreen
 import com.yourcompany.android.tictactoe.ui.screens.GameScreen
-import com.yourcompany.android.tictactoe.ui.screens.HostOrDiscoverScreen
+import com.yourcompany.android.tictactoe.ui.screens.HomeScreen
 import com.yourcompany.android.tictactoe.ui.screens.HostingScreen
 import com.yourcompany.android.tictactoe.ui.theme.TicTacToeTheme
 import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
   private fun MainActivityScreen() {
     Surface {
       when (TicTacToeRouter.currentScreen) {
-        is Screen.HostOrDiscover -> HostOrDiscoverScreen(viewModel)
+        is Screen.Home -> HomeScreen(viewModel)
         is Screen.Hosting -> HostingScreen(viewModel)
         is Screen.Discovering -> DiscoveringScreen(viewModel)
         is Screen.Game -> GameScreen(viewModel)

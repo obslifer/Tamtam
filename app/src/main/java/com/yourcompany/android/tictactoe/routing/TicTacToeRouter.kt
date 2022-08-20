@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
  * Class defining all possible screens in the app.
  */
 sealed class Screen {
-  object HostOrDiscover : Screen()
+  object Home : Screen()
   object Hosting : Screen()
   object Discovering : Screen()
   object Game : Screen()
@@ -20,7 +20,7 @@ sealed class Screen {
  * Also keeps track of the current screen.
  */
 object TicTacToeRouter {
-  var currentScreen: Screen by mutableStateOf(Screen.HostOrDiscover)
+  var currentScreen: Screen by mutableStateOf(Screen.Home)
 
   fun navigateTo(destination: Screen) {
     currentScreen = destination
