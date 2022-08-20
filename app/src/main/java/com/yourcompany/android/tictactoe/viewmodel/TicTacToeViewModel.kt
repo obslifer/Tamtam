@@ -22,6 +22,7 @@ import com.yourcompany.android.tictactoe.domain.model.GameState
 import com.yourcompany.android.tictactoe.domain.model.TicTacToe
 import com.yourcompany.android.tictactoe.routing.Screen
 import com.yourcompany.android.tictactoe.routing.TicTacToeRouter
+import java.util.*
 import kotlin.text.Charsets.UTF_8
 
 class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : ViewModel() {
@@ -32,9 +33,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
   )
   val state: LiveData<GameState> = _state
 
-  private val STRATEGY = Strategy.P2P_STAR
-
-  private fun getLocalUserName() = "User" + System.currentTimeMillis().toString()
+  private val localUsername = UUID.randomUUID().toString()
   private var localPlayer: Int = 0
   private var opponentPlayer: Int = 0
   private var opponentEndpointId: String = ""
@@ -43,10 +42,8 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     override fun onPayloadReceived(endpointId: String, payload: Payload) {
       Log.d(TAG, "onPayloadReceived")
       // This always gets the full data of the payload. Is null if it's not a BYTES payload.
-      if (payload.getType() == Payload.Type.BYTES) {
-        val positionStr = String(payload.asBytes()!!, UTF_8)
-        val positionArray = positionStr.split(",")
-        val position = positionArray[0].toInt() to positionArray[1].toInt()
+      if (payload.type == Payload.Type.BYTES) {
+        val position = payload.toPosition()
         Log.d(TAG, "Received [${position.first},${position.second}] from $endpointId")
         play(opponentPlayer, position)
       }
@@ -65,14 +62,14 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
       Log.d(TAG, "Requesting connection...")
       connectionsClient.requestConnection(
-        getLocalUserName(),
+        localUsername,
         endpointId,
         connectionLifecycleCallback
       ).addOnSuccessListener {
         // Successfully requested a connection. Now both sides
         // must accept before the connection is established.
         Log.d(TAG, "Successfully requested a connection")
-      }.addOnFailureListener { e: Exception ->
+      }.addOnFailureListener {
         // Failed to request the connection.
         Log.d(TAG, "Failed to request the connection")
       }
@@ -135,7 +132,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     val advertisingOptions = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
 
     connectionsClient.startAdvertising(
-      getLocalUserName(),
+      localUsername,
       BuildConfig.APPLICATION_ID,
       connectionLifecycleCallback,
       advertisingOptions
@@ -196,14 +193,14 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
   fun play(position: Pair<Int, Int>) {
     if (game.playerTurn != localPlayer) return
-    if (!game.isNonPlayedBucket(position)) return
+    if (game.isPlayedBucket(position)) return
 
     play(localPlayer, position)
 
     Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
     connectionsClient.sendPayload(
       opponentEndpointId,
-      Payload.fromBytes("${position.first},${position.second}".toByteArray())
+      position.toPayLoad()
     )
   }
 
@@ -224,5 +221,14 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
   private companion object {
     const val TAG = "ViewModel"
+    val STRATEGY = Strategy.P2P_STAR
   }
+}
+
+fun Pair<Int, Int>.toPayLoad() = Payload.fromBytes("$first,$second".toByteArray(UTF_8))
+
+fun Payload.toPosition(): Pair<Int, Int> {
+  val positionStr = String(asBytes()!!, UTF_8)
+  val positionArray = positionStr.split(",")
+  return positionArray[0].toInt() to positionArray[1].toInt()
 }

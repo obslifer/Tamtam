@@ -32,7 +32,7 @@ class TicTacToe(val players: Int = 2, val boardSize: Int = 3, val winningCount: 
 
   private fun anyNonPlayedBucket() = board.flatten().any { it == 0 }
 
-  fun isNonPlayedBucket(position: Pair<Int, Int>) = board[position.first][position.second] == 0
+  fun isPlayedBucket(position: Pair<Int, Int>) = board[position.first][position.second] != 0
 
   private fun hasPlayerWon(player: Int): Boolean {
     if (player < 1 || player > players) return false
