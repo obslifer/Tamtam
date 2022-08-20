@@ -1,12 +1,15 @@
 package com.yourcompany.android.tictactoe.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -86,7 +89,15 @@ fun OngoingGameScreen(
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    Text(text = "You're player $localPlayer")
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Text(text = "You're player $localPlayer")
+      Box(
+        modifier = Modifier
+          .padding(4.dp, 0.dp)
+          .size(10.dp)
+          .background(color = getPlayerColor(localPlayer))
+      )
+    }
     Text(
       text = if (localPlayer == playerTurn) "Your turn!" else "Waiting for player $playerTurn...",
       fontWeight = FontWeight.Bold
