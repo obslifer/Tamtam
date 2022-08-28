@@ -153,21 +153,21 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
   fun startDiscovering() {
     Log.d(TAG, "Start discovering...")
     val discoveryOptions = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
-    connectionsClient
-      .startDiscovery(
-        BuildConfig.APPLICATION_ID,
-        endpointDiscoveryCallback,
-        discoveryOptions
-      ).addOnSuccessListener {
-        // Discovering...
-        Log.d(TAG, "Discovering...")
-        TicTacToeRouter.navigateTo(Screen.Discovering)
-        localPlayer = 2
-        opponentPlayer = 1
-      }.addOnFailureListener {
-        // Unable to start discovering
-        Log.d(TAG, "Unable to start discovering")
-      }
+
+    connectionsClient.startDiscovery(
+      BuildConfig.APPLICATION_ID,
+      endpointDiscoveryCallback,
+      discoveryOptions
+    ).addOnSuccessListener {
+      // Discovering...
+      Log.d(TAG, "Discovering...")
+      TicTacToeRouter.navigateTo(Screen.Discovering)
+      localPlayer = 2
+      opponentPlayer = 1
+    }.addOnFailureListener {
+      // Unable to start discovering
+      Log.d(TAG, "Unable to start discovering")
+    }
   }
 
   fun newGame() {
@@ -221,7 +221,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
   private companion object {
     const val TAG = "TicTacToeVM"
-    val STRATEGY = Strategy.P2P_STAR
+    val STRATEGY = Strategy.P2P_POINT_TO_POINT
   }
 }
 
