@@ -1,6 +1,14 @@
 # android-nearby-tictactoe
 TicTacToe game using Nearby Connections API.
 
+### Branches
+
+This is the **final** project branch.
+
+To see the **starter** project, check the [`starter`](https://github.com/fernandospr/android-nearby-tictactoe/tree/starter) branch.
+
+To see the **challenge** project, check the [`challenge`](https://github.com/fernandospr/android-nearby-tictactoe/tree/challenge) branch.
+
 ### Running the app
 
 1. Build and run the app on two separate physical devices. You should see the following screen:
