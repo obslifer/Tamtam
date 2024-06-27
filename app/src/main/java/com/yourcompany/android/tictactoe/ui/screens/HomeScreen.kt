@@ -12,10 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
+import com.yourcompany.android.tictactoe.viewmodel.MessagingViewModel
 
 @Composable
-fun HomeScreen(viewModel: TicTacToeViewModel) {
+fun HomeScreen(viewModel: MessagingViewModel) {
   HomeScreen(
     onHostClick = { viewModel.startHosting() },
     onDiscoverClick = { viewModel.startDiscovering() }

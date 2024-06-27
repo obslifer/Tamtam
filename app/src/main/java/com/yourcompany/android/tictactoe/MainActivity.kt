@@ -15,18 +15,19 @@ import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
 import com.google.android.gms.nearby.Nearby
 import com.yourcompany.android.tictactoe.routing.Screen
-import com.yourcompany.android.tictactoe.routing.TicTacToeRouter
+import com.yourcompany.android.tictactoe.routing.MessagingRouter
 import com.yourcompany.android.tictactoe.ui.screens.DiscoveringScreen
-import com.yourcompany.android.tictactoe.ui.screens.GameScreen
+import com.yourcompany.android.tictactoe.ui.screens.ChatScreen
 import com.yourcompany.android.tictactoe.ui.screens.HomeScreen
 import com.yourcompany.android.tictactoe.ui.screens.HostingScreen
+import com.yourcompany.android.tictactoe.ui.screens.UsernameScreen
 import com.yourcompany.android.tictactoe.ui.theme.TicTacToeTheme
-import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
+import com.yourcompany.android.tictactoe.viewmodel.MessagingViewModel
 import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-  private val viewModel: TicTacToeViewModel by viewModels {
+  private val viewModel: MessagingViewModel by viewModels {
     TicTacToeViewModelFactory(Nearby.getConnectionsClient(applicationContext))
   }
 
@@ -44,18 +45,13 @@ class MainActivity : ComponentActivity() {
   override fun onStart() {
     super.onStart()
     if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
-      requestMultiplePermissions.launch(
-        REQUIRED_PERMISSIONS
-      )
+      requestMultiplePermissions.launch(REQUIRED_PERMISSIONS)
     }
   }
 
   private fun hasPermissions(context: Context, permissions: Array<String>): Boolean {
     return permissions.isEmpty() || permissions.all {
-      ContextCompat.checkSelfPermission(
-        context,
-        it
-      ) == PackageManager.PERMISSION_GRANTED
+      ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
   }
 
@@ -72,11 +68,15 @@ class MainActivity : ComponentActivity() {
   @Composable
   private fun MainActivityScreen() {
     Surface {
-      when (TicTacToeRouter.currentScreen) {
+      when (MessagingRouter.currentScreen) {
+        is Screen.Username -> UsernameScreen(viewModel) {
+          // Naviguez vers l'écran d'accueil ou tout autre écran nécessaire
+          MessagingRouter.navigateTo(Screen.Home)
+        }
         is Screen.Home -> HomeScreen(viewModel)
         is Screen.Hosting -> HostingScreen(viewModel)
         is Screen.Discovering -> DiscoveringScreen(viewModel)
-        is Screen.Game -> GameScreen(viewModel)
+        is Screen.Chat -> ChatScreen(viewModel)
       }
     }
   }

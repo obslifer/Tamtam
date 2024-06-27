@@ -15,11 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.yourcompany.android.tictactoe.viewmodel.TicTacToeViewModel
+import com.yourcompany.android.tictactoe.viewmodel.MessagingViewModel
 
 @Composable
 fun HostingScreen(
-  viewModel: TicTacToeViewModel
+  viewModel: MessagingViewModel
 ) {
   BackHandler(onBack = {
     viewModel.goToHome()
@@ -33,7 +33,7 @@ fun HostingScreen(
 
 @Composable
 fun DiscoveringScreen(
-  viewModel: TicTacToeViewModel
+  viewModel: MessagingViewModel
 ) {
   BackHandler(onBack = {
     viewModel.goToHome()

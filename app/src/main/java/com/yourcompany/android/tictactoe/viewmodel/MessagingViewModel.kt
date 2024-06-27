@@ -4,46 +4,56 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.nearby.connection.AdvertisingOptions
-import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
-import com.google.android.gms.nearby.connection.ConnectionResolution
-import com.google.android.gms.nearby.connection.ConnectionsClient
-import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.google.android.gms.nearby.connection.DiscoveryOptions
-import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
-import com.google.android.gms.nearby.connection.Payload
-import com.google.android.gms.nearby.connection.PayloadCallback
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate
-import com.google.android.gms.nearby.connection.Strategy
+import com.google.android.gms.nearby.connection.*
 import com.yourcompany.android.tictactoe.BuildConfig
-import com.yourcompany.android.tictactoe.domain.model.GameState
-import com.yourcompany.android.tictactoe.domain.model.TicTacToe
+import com.yourcompany.android.tictactoe.domain.model.Message
+import com.yourcompany.android.tictactoe.domain.model.MessageState
 import com.yourcompany.android.tictactoe.routing.Screen
-import com.yourcompany.android.tictactoe.routing.TicTacToeRouter
+import com.yourcompany.android.tictactoe.routing.MessagingRouter
 import java.util.*
 import kotlin.text.Charsets.UTF_8
 
-class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : ViewModel() {
-  private val localUsername = UUID.randomUUID().toString()
-  private var localPlayer: Int = 0
-  private var opponentPlayer: Int = 0
+class MessagingViewModel(private val connectionsClient: ConnectionsClient) : ViewModel() {
+  private var localUsername = "user"
   private var opponentEndpointId: String = ""
 
-  private var game = TicTacToe()
+  fun setLocalUsername(username: String) {
+    localUsername = username
+  }
+  private fun parseMessage(messageString: String): Pair<String, String> {
+    // Example format: "Message(sender=Yann, content=Yo)"
+    val startIndex = messageString.indexOf("sender=")
+    val endIndex = messageString.indexOf(", content=")
 
-  private val _state = MutableLiveData(GameState.Uninitialized)
-  val state: LiveData<GameState> = _state
+    if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex) {
+      // Handle invalid message format, or fallback logic if needed
+      return Pair("", messageString) // Assume no sender, treat whole message as content
+    }
+
+    val senderUsername = messageString.substring(startIndex + "sender=".length, endIndex).trim()
+
+    val contentStartIndex = endIndex + ", content=".length
+    val content = messageString.substring(contentStartIndex, messageString.length - 1).trim()
+
+    return Pair(senderUsername, content)
+  }
+
+  private val _state = MutableLiveData(MessageState(localUser = localUsername))
+  val state: LiveData<MessageState> = _state
 
   private val payloadCallback: PayloadCallback = object : PayloadCallback() {
     override fun onPayloadReceived(endpointId: String, payload: Payload) {
       Log.d(TAG, "onPayloadReceived")
 
       if (payload.type == Payload.Type.BYTES) {
-        val position = payload.toPosition()
-        Log.d(TAG, "Received [${position.first},${position.second}] from $endpointId")
-        play(opponentPlayer, position)
+        val messageBytes = payload.asBytes() ?: return
+        val messageString = messageBytes.toString(UTF_8)
+        Log.d(TAG, "Received message: $messageBytes from $endpointId")
+
+        // Parse the messageString to retrieve senderUsername and content
+        val (sender, content) = parseMessage(messageString)
+
+        addMessage(Message(sender = sender, content = content))
       }
     }
 
@@ -92,8 +102,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
           connectionsClient.stopDiscovery()
           opponentEndpointId = endpointId
           Log.d(TAG, "opponentEndpointId: $opponentEndpointId")
-          newGame()
-          TicTacToeRouter.navigateTo(Screen.Game)
+          MessagingRouter.navigateTo(Screen.Chat)
         }
         ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
           Log.d(TAG, "ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED")
@@ -115,7 +124,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
   fun startHosting() {
     Log.d(TAG, "Start advertising...")
-    TicTacToeRouter.navigateTo(Screen.Hosting)
+    MessagingRouter.navigateTo(Screen.Hosting)
     val advertisingOptions = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
 
     connectionsClient.startAdvertising(
@@ -125,17 +134,15 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
       advertisingOptions
     ).addOnSuccessListener {
       Log.d(TAG, "Advertising...")
-      localPlayer = 1
-      opponentPlayer = 2
     }.addOnFailureListener {
       Log.d(TAG, "Unable to start advertising")
-      TicTacToeRouter.navigateTo(Screen.Home)
+      MessagingRouter.navigateTo(Screen.Home)
     }
   }
 
   fun startDiscovering() {
     Log.d(TAG, "Start discovering...")
-    TicTacToeRouter.navigateTo(Screen.Discovering)
+    MessagingRouter.navigateTo(Screen.Discovering)
     val discoveryOptions = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
 
     connectionsClient.startDiscovery(
@@ -144,41 +151,25 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
       discoveryOptions
     ).addOnSuccessListener {
       Log.d(TAG, "Discovering...")
-      localPlayer = 2
-      opponentPlayer = 1
     }.addOnFailureListener {
       Log.d(TAG, "Unable to start discovering")
-      TicTacToeRouter.navigateTo(Screen.Home)
+      MessagingRouter.navigateTo(Screen.Home)
     }
   }
 
-  fun newGame() {
-    Log.d(TAG, "Starting new game")
-    game = TicTacToe()
-    _state.value = GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
+  fun sendMessage(content: String) {
+    Log.d(TAG, "Sending message: $content to $opponentEndpointId")
+    val message = Message(sender = localUsername, content = content)
+    val payload = Payload.fromBytes(message.toString().toByteArray(UTF_8))
+    connectionsClient.sendPayload(opponentEndpointId, payload)
+    Log.d(TAG, localUsername)
+    addMessage(Message(sender = localUsername, content = content))
   }
 
-  fun play(position: Pair<Int, Int>) {
-    if (game.playerTurn != localPlayer) return
-    if (game.isPlayedBucket(position)) return
-
-    play(localPlayer, position)
-    sendPosition(position)
-  }
-
-  private fun play(player: Int, position: Pair<Int, Int>) {
-    Log.d(TAG, "Player $player played [${position.first},${position.second}]")
-
-    game.play(player, position)
-    _state.value = GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
-  }
-
-  private fun sendPosition(position: Pair<Int, Int>) {
-    Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
-    connectionsClient.sendPayload(
-      opponentEndpointId,
-      position.toPayLoad()
-    )
+  private fun addMessage(message: Message) {
+    val currentState = _state.value ?: return
+    _state.value = currentState.copy(messages = currentState.messages + message)
+    Log.d(TAG, "opponent: $opponentEndpointId")
   }
 
   override fun onCleared() {
@@ -188,7 +179,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
   fun goToHome() {
     stopClient()
-    TicTacToeRouter.navigateTo(Screen.Home)
+    MessagingRouter.navigateTo(Screen.Home)
   }
 
   private fun stopClient() {
@@ -196,21 +187,11 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
     connectionsClient.stopAdvertising()
     connectionsClient.stopDiscovery()
     connectionsClient.stopAllEndpoints()
-    localPlayer = 0
-    opponentPlayer = 0
     opponentEndpointId = ""
   }
 
-  private companion object {
-    const val TAG = "TicTacToeVM"
+  companion object {
+    const val TAG = "MessagingVM"
     val STRATEGY = Strategy.P2P_POINT_TO_POINT
   }
-}
-
-fun Pair<Int, Int>.toPayLoad() = Payload.fromBytes("$first,$second".toByteArray(UTF_8))
-
-fun Payload.toPosition(): Pair<Int, Int> {
-  val positionStr = String(asBytes()!!, UTF_8)
-  val positionArray = positionStr.split(",")
-  return positionArray[0].toInt() to positionArray[1].toInt()
 }

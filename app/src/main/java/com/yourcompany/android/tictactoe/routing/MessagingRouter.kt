@@ -11,7 +11,8 @@ sealed class Screen {
   object Home : Screen()
   object Hosting : Screen()
   object Discovering : Screen()
-  object Game : Screen()
+  object Chat : Screen()
+  object Username : Screen()
 }
 
 /**
@@ -19,8 +20,8 @@ sealed class Screen {
  *
  * Also keeps track of the current screen.
  */
-object TicTacToeRouter {
-  var currentScreen: Screen by mutableStateOf(Screen.Home)
+object MessagingRouter {
+  var currentScreen: Screen by mutableStateOf(Screen.Username)
 
   fun navigateTo(destination: Screen) {
     currentScreen = destination

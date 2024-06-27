@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-  compileSdk 32
+  compileSdk 33
 
   defaultConfig {
     applicationId "com.yourcompany.android.tictactoe"
@@ -44,6 +44,7 @@ android {
       excludes += '/META-INF/{AL2.0,LGPL2.1}'
     }
   }
+  namespace 'com.yourcompany.android.tictactoe'
 }
 
 dependencies {
@@ -54,6 +55,7 @@ dependencies {
   implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
   implementation 'androidx.compose.runtime:runtime-livedata:1.2.1'
   implementation 'androidx.activity:activity-compose:1.5.1'
+  implementation 'androidx.compose.foundation:foundation-layout:1.0.0@aar'
   implementation 'com.google.android.gms:play-services-nearby:18.3.0'
   testImplementation 'junit:junit:4.13.2'
   androidTestImplementation 'androidx.test.ext:junit:1.1.3'
