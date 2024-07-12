@@ -59,6 +59,7 @@ class MessagingViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
     override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
       Log.d(TAG, "onPayloadTransferUpdate")
+      
     }
   }
 
